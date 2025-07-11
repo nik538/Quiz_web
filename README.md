@@ -1,11 +1,11 @@
-# 🧠 Quiz Web Application
+#  Quiz Web Application
 
 A modern, fully responsive, single-page Quiz Web Application built using HTML, CSS, and JavaScript that fetches real-time quiz questions using 
 the Open Trivia Database API. Users answer multiple-choice questions under a timer, and see their score and correct answers at the end.
 
 
 
-## 📌 Project Overview
+##  Project Overview
 
 This quiz app provides an engaging and time-bound experience for users to test their general knowledge. It is beginner-friendly, efficient, and
 great for learning about API integration, event-driven JavaScript, and responsive design.
@@ -25,7 +25,7 @@ great for learning about API integration, event-driven JavaScript, and responsiv
 
 ##  How to Use
 
-1. Click on **"Start Quiz"**
+1. Click on "Start Quiz".
 2. Answer 5 questions, each with a 15-second timer.
 3. After all questions, the app scrolls to show your score and correct answers.
 4. Verify and learn from the correct options shown.
