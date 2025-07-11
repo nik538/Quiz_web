@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quiz App</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: url('https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1400&q=80') no-repeat center center fixed;
+      background-size: cover;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      width: 90%;
+      max-width: 500px;
+      text-align: center;
+    }
+
+    #timer {
+      font-size: 18px;
+      margin-bottom: 10px;
+      color: #333;
+      font-weight: bold;
+    }
+
+    #question {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    #options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 0;
+      list-style-type: none;
+    }
+
+    #options li {
+      background: #f0f0f0;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.3s;
+      border: 1px solid #ccc;
+      user-select: none;
+    }
+
+    #options li.selected {
+      background-color: #b0d4ff;
+    }
+
+    #options li:hover {
+      background-color: #d8d8d8;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #66b3ff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s ease, transform 0.1s ease;
+    }
+
+    button:hover {
+      background: #3399ff;
+    }
+
+    button:active {
+      background: #0066cc;
+      transform: scale(0.98);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    #answer-list li {
+      text-align: left;
+      margin-bottom: 10px;
+      padding: 8px;
+      background: #f8f9fa;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+
+    #answer-list li strong {
+      color: #007bff;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 15px;
+        width: 95%;
+      }
+
+      #question {
+        font-size: 20px;
+      }
+
+      #options li {
+        font-size: 15px;
+      }
+
+      button {
+        font-size: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Start Screen -->
+  <div class="container" id="start-screen">
+    <h1>Welcome to the Quiz App</h1>
+    <button id="start-btn">Start Quiz</button>
+  </div>
+
+  <!-- Quiz Screen -->
+  <div class="container hidden" id="quiz-box">
+    <h1>Quiz App</h1>
+    <div id="timer">Time: <span id="time">15</span>s</div>
+    <div id="question">Loading question...</div>
+    <ul id="options"></ul>
+    <button id="next-btn">Next</button>
+  </div>
+
+  <!-- Result Screen -->
+  <div class="container hidden" id="result">
+    <h2>Your Score: <span id="final-score"></span></h2>
+    <h3>Correct Answers:</h3>
+    <ul id="answer-list"></ul>
+  </div>
+
+  <script>
+    let questions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let timer;
+    let timeLeft = 15;
+    let selectedOption = null;
+
+    const startScreen = document.getElementById("start-screen");
+    const startBtn = document.getElementById("start-btn");
+    const timerEl = document.getElementById("time");
+    const questionEl = document.getElementById("question");
+    const optionsEl = document.getElementById("options");
+    const nextBtn = document.getElementById("next-btn");
+    const quizBox = document.getElementById("quiz-box");
+    const resultBox = document.getElementById("result");
+    const finalScoreEl = document.getElementById("final-score");
+    const answerList = document.getElementById("answer-list");
+
+    startBtn.addEventListener("click", () => {
+      startScreen.classList.add("hidden");
+      quizBox.classList.remove("hidden");
+      loadQuestions();
+    });
+
+    async function loadQuestions() {
+      questionEl.textContent = "Loading question...";
+      const res = await fetch("https://opentdb.com/api.php?amount=5&type=multiple");
+      const data = await res.json();
+      questions = data.results.map(q => ({
+        question: decodeHTML(q.question),
+        correct: decodeHTML(q.correct_answer),
+        options: shuffle([...q.incorrect_answers.map(decodeHTML), decodeHTML(q.correct_answer)])
+      }));
+      currentIndex = 0;
+      score = 0;
+      showQuestion();
+    }
+
+    function decodeHTML(html) {
+      const txt = document.createElement("textarea");
+      txt.innerHTML = html;
+      return txt.value;
+    }
+
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    function showQuestion() {
+      clearInterval(timer);
+      timeLeft = 15;
+      timerEl.textContent = timeLeft;
+      startTimer();
+
+      selectedOption = null;
+
+      const q = questions[currentIndex];
+      questionEl.innerHTML = q.question;
+      optionsEl.innerHTML = "";
+
+      q.options.forEach(option => {
+        const li = document.createElement("li");
+        li.textContent = option;
+        li.onclick = () => selectOption(li);
+        optionsEl.appendChild(li);
+      });
+
+      nextBtn.disabled = true;
+    }
+
+    function startTimer() {
+      timer = setInterval(() => {
+        timeLeft--;
+        timerEl.textContent = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          nextBtn.disabled = false;
+          Array.from(optionsEl.children).forEach(opt => opt.style.pointerEvents = "none");
+        }
+      }, 1000);
+    }
+
+    function selectOption(li) {
+      if (selectedOption) {
+        selectedOption.classList.remove("selected");
+      }
+      selectedOption = li;
+      li.classList.add("selected");
+      nextBtn.disabled = false;
+    }
+
+    nextBtn.addEventListener("click", () => {
+      clearInterval(timer);
+      if (selectedOption && selectedOption.textContent === questions[currentIndex].correct) {
+        score++;
+      }
+      currentIndex++;
+      if (currentIndex < questions.length) {
+        showQuestion();
+      } else {
+        showResult();
+      }
+    });
+
+    function showResult() {
+      quizBox.classList.add("hidden");
+      resultBox.classList.remove("hidden");
+      finalScoreEl.textContent = `${score} / ${questions.length}`;
+      answerList.innerHTML = "";
+      questions.forEach((q, index) => {
+        const li = document.createElement("li");
+        li.innerHTML = `<strong>Q${index + 1}:</strong> ${q.question}<br><strong>Correct Answer:</strong> ${q.correct}`;
+        answerList.appendChild(li);
+      });
+    }
+  </script>
+
+</body>
+</html>
