@@ -44,8 +44,9 @@ great for learning about API integration, event-driven JavaScript, and responsiv
 
 ##  Demo Video
 
-Watch the working model of the Quiz App in action:
+##  Demo Video
 
-[![Watch Demo](C:\Quix_web\demo.mp4)
+▶️ [Click here to watch the demo](https://github.com/nik538/Quiz_web/blob/main/demo.mp4)
+
 
 
